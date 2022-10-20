@@ -17,6 +17,9 @@ let bgPicker;
 let strokePicker;
 let boxPicker;
 
+let player_1_color;
+let player_2_color;
+
 // const getCanvas = parent(document.querySelector('.gamingArea'));
 function setup() {
     const canvas = createCanvas(windowWidth - 5, windowHeight - 206);
@@ -57,16 +60,17 @@ function setup() {
 }
 
 function draw() {
+    console.log("drawing")
     let fps = slider.value();
     frameRate(fps);
     generate();
-    bgColor = bgPicker.color();
+    // bgColor = bgPicker.color();
     strokeColor = strokePicker.color();
-    boxColor = boxPicker.color();
+    // boxColor = boxPicker.color();
 
     for (let i = 0; i < columns; i++) {
         for (let j = 0; j < rows; j++) {
-            color = currentBoard[i][j] === 1 ? boxColor : bgColor;
+            color = currentBoard[i][j].life === 1 ? currentBoard[i][j].color : bgColor;
             fill(color);
             stroke(strokeColor);
             rect(i * unitLength, j * unitLength, unitLength, unitLength);
@@ -82,8 +86,11 @@ function init() {
 
     for (let i = 0; i < columns; i++) {
         for (let j = 0; j < rows; j++) {
-            currentBoard[i][j] = 0;
-            nextBoard[i][j] = 0;
+            // currentBoard[i][j] = 0;
+            // nextBoard[i][j] = 0;
+            currentBoard[i][j] = { species: 0, live: 0, color: bgColor, age: 0 };
+            nextBoard[i][j] = { species: 0, live: 0, color: bgColor, age: 0 };
+
         }
     }
 }
@@ -106,7 +113,8 @@ function windowResized() {
     overpopulation = 3;
     reproduction = 3;
     init();
-    draw();
+    // draw();
+    loop();
 }
 
 function generate() {
@@ -124,23 +132,55 @@ function generate() {
                         continue;
                     }
                     neighbors +=
-                        currentBoard[(x + i + columns) % columns][(y + j + rows) % rows];
+                        currentBoard[(x + i + columns) % columns][(y + j + rows) % rows].life;
                 }
             }
 
             // Rules of Life
-            if (currentBoard[x][y] === 1 && neighbors < loneliness) {
+            if (currentBoard[x][y].life === 1 && neighbors < loneliness) {
                 // Die of Loneliness
-                nextBoard[x][y] = 0;
-            } else if (currentBoard[x][y] === 1 && neighbors > overpopulation) {
+                // nextBoard[x][y] = 0;
+
+                // currentBoard[x][y].species = currentPlayer
+                nextBoard[x][y].life = 0
+                nextBoard[x][y].color = bgColor
+                nextBoard[x][y].age = 0
+            } else if (currentBoard[x][y].life === 1 && neighbors > overpopulation) {
                 // Die of Overpopulation
-                nextBoard[x][y] = 0;
-            } else if (currentBoard[x][y] === 0 && neighbors === reproduction) {
+                // nextBoard[x][y] = 0;
+
+                nextBoard[x][y].life = 0
+                nextBoard[x][y].color = bgColor
+                nextBoard[x][y].age = 0
+            } else if (currentBoard[x][y].life === 0 && neighbors === reproduction) {
                 // New life due to Reproduction
-                nextBoard[x][y] = 1;
+                // nextBoardnext= 1;
+
+                if (Math.random() > 0.5) {
+                    nextBoard[x][y].species = 1
+                    nextBoard[x][y].life = 1
+                    nextBoard[x][y].color = "blue"
+                    nextBoard[x][y].age = 0
+                }else{
+                nextBoard[x][y].species = 2
+                nextBoard[x][y].life = 1
+                nextBoard[x][y].color = "red"
+                nextBoard[x][y].age = 0}
             } else {
                 // Stasis
-                nextBoard[x][y] = currentBoard[x][y];
+                // nextBoard[x][y] = currentBoard[x][y];
+
+                if (currentBoard[x][y].life == 1) {
+                    console.log('life stasis')
+                    nextBoard[x][y].life = 1
+                    nextBoard[x][y].color = "yellow"
+                    nextBoard[x][y].age++
+                } else {
+                    nextBoard[x][y].life = 0
+                    nextBoard[x][y].color = bgColor
+                    nextBoard[x][y].age = 0
+                }
+
             }
         }
     }
@@ -210,7 +250,7 @@ document.querySelector('#twoo')
         overpopulation = 2;
     });
 
-document.querySelector('#threee')
+document.querySelector('#three')
     .addEventListener('click', function () {
         overpopulation = 3;
     });
@@ -229,6 +269,8 @@ document.querySelector('#reset')
         init();
 
     });
+
+
 
 const darkBtn = document.querySelector('#dark')
 darkBtn.addEventListener('click', function onClick(event) {
@@ -265,13 +307,37 @@ document.querySelector('#random')
         }
     });
 
+let currentPlayer = 0;
+
+document.querySelector('#player_1').addEventListener('click', () => {
+    currentPlayer = 1
+    boxColor =  boxPicker.color();
+    
+    player_1_color = Object.assign({},boxColor);
+    console.log("check box color", boxColor, "player1 color",player_1_color);
+
+})
+
+document.querySelector('#player_2').addEventListener('click', () => {
+    currentPlayer = 2
+    boxColor = boxPicker.color();
+    player_2_color = Object.assign({},boxColor);
+})
+
 function mouseDragged() {
     if (mouseX > unitLength * columns || mouseY > unitLength * rows) {
         return;
     }
     const x = Math.floor(mouseX / unitLength);
     const y = Math.floor(mouseY / unitLength);
-    currentBoard[x][y] = 1;
+
+    // currentBoard[x][y] = 1;
+    currentBoard[x][y].species = currentPlayer
+    currentBoard[x][y].life = 1
+    currentBoard[x][y].color = boxColor
+    currentBoard[x][y].age = 0
+
+
     fill(boxColor);
     stroke(strokeColor);
     rect(x * unitLength, y * unitLength, unitLength, unitLength);
@@ -283,7 +349,7 @@ function mousePressed() {
 }
 
 function mouseReleased() {
-    loop();
+    // loop();
 }
 
 document.querySelector('#Gosper')
